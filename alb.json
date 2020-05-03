@@ -1,0 +1,385 @@
+{
+    "Description": "Template creates Application Load Balancer with Autoscaling group with CloudWatch Alarms - Michael Phan",
+    "Parameters": {
+        "SSHKeyPair": {
+            "Description": "SSH Key Pair",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        }
+    },
+    "Resources": {
+        "VPC": {
+            "Type": "AWS::EC2::VPC",
+            "Properties": {
+                "CidrBlock": "10.0.0.0/16",
+                "EnableDnsHostnames": true,
+                "EnableDnsSupport": true,
+                "InstanceTenancy": "default",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "VPC1"
+                    }
+                ]
+            }
+        },
+        "PublicSubnetA": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": "10.0.0.0/24",
+                "AvailabilityZone": "us-east-1a",
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "subnet-public-A"
+                    }
+                ]
+            }
+        },
+        "PublicSubnetB": {
+            "Type": "AWS::EC2::Subnet",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "CidrBlock": "10.0.1.0/24",
+                "AvailabilityZone": "us-east-1b",
+                "MapPublicIpOnLaunch": true,
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "subnet-public-B"
+                    }
+                ]
+            }
+        },
+        "InternetGateway": {
+            "Type": "AWS::EC2::InternetGateway",
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "VPC1-IGW"
+                    }
+                ]
+            }
+        },
+        "InternetGatewayAttachment": {
+            "Type": "AWS::EC2::VPCGatewayAttachment",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "InternetGatewayId": {
+                    "Ref": "InternetGateway"
+                }
+            }
+        },
+        "PublicRouteTable": {
+            "Type": "AWS::EC2::RouteTable",
+            "Properties": {
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "PublicRT"
+                    }
+                ]
+            }
+        },
+        "SubnetAssociateRouteTableA": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "PublicSubnetA"
+                }
+            }
+        },
+        "SubnetAssociateRouteTableB": {
+            "Type": "AWS::EC2::SubnetRouteTableAssociation",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "SubnetId": {
+                    "Ref": "PublicSubnetB"
+                }
+            }
+        },
+        "RoutePublicTableToInternet": {
+            "Type": "AWS::EC2::Route",
+            "DependsOn": "InternetGatewayAttachment",
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "PublicRouteTable"
+                },
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                }
+            }
+        },
+        "ALBSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow HTTP from clients",
+                "GroupName": "ALBSG",
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 80,
+                        "ToPort": 80,
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+        "WebserverSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow SSH and ALB to webservers",
+                "GroupName": "WebserverSG",
+                "VpcId": {
+                    "Ref": "VPC"
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 22,
+                        "ToPort": 22,
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 80,
+                        "ToPort": 80,
+                        "SourceSecurityGroupId": {
+                            "Ref": "ALBSG"
+                        }
+                    }
+                ]
+            }
+        },
+        "ALB": {
+            "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+            "Properties": {
+                "IpAddressType": "ipv4",
+                "Name": "ALBWebserver",
+                "SecurityGroups": [
+                    {
+                        "Ref": "ALBSG"
+                    }
+            ],
+                "Subnets": [
+                    {
+                        "Ref": "PublicSubnetA"
+                    },
+                    {
+                        "Ref": "PublicSubnetB"
+                    }
+                ]
+            }
+        },
+        "ALBListener": {
+            "Type": "AWS::ElasticLoadBalancingV2::Listener",
+            "Properties": {
+                "DefaultActions": [
+                    {
+                        "Type": "forward",
+                        "ForwardConfig": {
+                            "TargetGroups": [
+                                {
+                                    "TargetGroupArn": {
+                                        "Ref": "ALBTargetGroup"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "LoadBalancerArn": {
+                    "Ref": "ALB"
+                },
+                "Port": 80,
+                "Protocol": "HTTP"
+            }
+        },
+        "ALBTargetGroup": {
+            "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+            "Properties": {
+                "HealthCheckEnabled": true,
+                "HealthCheckIntervalSeconds": 5,
+                "HealthCheckTimeoutSeconds": 4,
+                "HealthCheckPath": "/index.php",
+                "Name": "webserverTG",
+                "Port": 80,
+                "Protocol": "HTTP",
+                "VpcId": {
+                    "Ref": "VPC"
+                }
+            }
+        },
+        "Ec2LaunchTemplate": {
+            "Type": "AWS::EC2::LaunchTemplate",
+            "Properties": {
+                "LaunchTemplateData": {
+                    "ImageId": "ami-0323c3dd2da7fb37d",
+                    "InstanceType": "t3.micro",
+                    "KeyName": {
+                        "Ref": "SSHKeyPair"
+                    },
+                    "SecurityGroupIds": [
+                        {
+                        "Ref": "WebserverSG"
+                        }
+                    ],
+                    "UserData": {
+                        "Fn::Base64": {
+                            "Fn::Join": ["",
+                                [
+                                "#!/bin/bash\n",
+                                "yum update -y\n",
+                                "yum install -y httpd php\n",
+                                "cd /var/www/html\n",
+                                "wget https://raw.githubusercontent.com/eokim/alb/master/bambi.jpg\n",
+                                "mv bambi.jpg dog.jpg\n",
+                                "wget https://raw.githubusercontent.com/eokim/alb/master/index.php\n",
+                                "systemctl start httpd\n",
+                                "systemctl enable httpd"
+                            ]
+                        ]
+                        }
+                    }
+                }
+            }
+        },
+        "Ec2AutoScaleGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "DependsOn": "InternetGatewayAttachment",
+            "Properties": {
+                "AutoScalingGroupName": "webserverASG",
+                "LaunchTemplate": {
+                    "LaunchTemplateId": {
+                        "Ref": "Ec2LaunchTemplate"
+                    },
+                    "Version": {
+                        "Fn::GetAtt": [
+                            "Ec2LaunchTemplate",
+                            "LatestVersionNumber"
+                        ]
+                    }
+                },
+                "MetricsCollection": [
+                    {
+                        "Granularity": "1Minute"
+                    }
+                ],
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": 300,
+                "MaxSize": "6",
+                "MinSize": "2",
+                "DesiredCapacity": "2",
+                "TargetGroupARNs": [
+                    {
+                        "Ref": "ALBTargetGroup"
+                    }
+                ],
+                "VPCZoneIdentifier": [
+                    {
+                        "Ref": "PublicSubnetA"
+                    },
+                    {
+                        "Ref": "PublicSubnetB"
+                    }
+                ]
+            }
+        },
+        "ScaleUpPolicyASG": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AdjustmentType": "ChangeInCapacity",
+                "PolicyType": "SimpleScaling",
+                "Cooldown": "300",
+                "AutoScalingGroupName": {
+                    "Ref": "Ec2AutoScaleGroup"
+                },
+                "ScalingAdjustment": 1
+            }
+        },
+        "ScaleDownPolicyASG": {
+            "Type": "AWS::AutoScaling::ScalingPolicy",
+            "Properties": {
+                "AdjustmentType": "ChangeInCapacity",
+                "PolicyType": "SimpleScaling",
+                "Cooldown": "300",
+                "AutoScalingGroupName": {
+                    "Ref": "Ec2AutoScaleGroup"
+                },
+                "ScalingAdjustment": -1
+            }
+        },
+        "CPUHighAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Scale-up if CPU is greater than 40% for 5 minutes",
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": "300",
+                "EvaluationPeriods": "1",
+                "Threshold": "40",
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleUpPolicyASG"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "AutoScalingGroupName",
+                        "Value": {
+                            "Ref": "Ec2AutoScaleGroup"
+                        }
+                    }
+                ],
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold"
+            }
+        },
+        "CPULowAlarm": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmDescription": "Scale-down if CPU is less than 20% for 5 minutes",
+                "MetricName": "CPUUtilization",
+                "Namespace": "AWS/EC2",
+                "Statistic": "Average",
+                "Period": "300",
+                "EvaluationPeriods": "1",
+                "Threshold": "20",
+                "AlarmActions": [
+                    {
+                        "Ref": "ScaleDownPolicyASG"
+                    }
+                ],
+                "Dimensions": [
+                    {
+                        "Name": "AutoScalingGroupName",
+                        "Value": {
+                            "Ref": "Ec2AutoScaleGroup"
+                        }
+                    }
+                ],
+                "ComparisonOperator": "LessThanOrEqualToThreshold"
+            }
+        }
+    }
+}
