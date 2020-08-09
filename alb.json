@@ -252,9 +252,9 @@
                                 "yum update -y\n",
                                 "yum install -y httpd php\n",
                                 "cd /var/www/html\n",
-                                "wget https://raw.githubusercontent.com/eokim/alb/master/bambi.jpg\n",
+                                "wget https://raw.githubusercontent.com/mphangit/alb/master/bambi.jpg\n",
                                 "mv bambi.jpg dog.jpg\n",
-                                "wget https://raw.githubusercontent.com/eokim/alb/master/index.php\n",
+                                "wget https://raw.githubusercontent.com/mphangit/alb/master/index.php\n",
                                 "systemctl start httpd\n",
                                 "systemctl enable httpd"
                             ]
