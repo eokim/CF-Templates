@@ -189,7 +189,7 @@
                     "yum install httpd -y\n",
                     "yum install git -y\n",
                     "systemctl start httpd\n",
-                    "git clone https://github.com/eokim/webserver1.git\n",
+                    "git clone https://github.com/mphangit/webserver1.git\n",
                     "cp /webserver1/* /var/www/html"
                     ]]}}
                 }
@@ -228,7 +228,7 @@
                         "yum install httpd -y\n",
                         "yum install git -y\n",
                         "systemctl start httpd\n",
-                        "git clone https://github.com/eokim/webserver2.git\n",
+                        "git clone https://github.com/mphangit/webserver2.git\n",
                         "cp /webserver2/* /var/www/html"
                         ]]}}
                     }
