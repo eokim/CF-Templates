@@ -106,5 +106,5 @@ Outputs:
         Description: "Name of the EventBridge"
         Value: !Ref EventBridge
     LambdaFunctionName:
-        Description: "Name of Lambda Function created by CloudFormation stack"
+        Description: "Name of Lambda Function created by CloudFormation stack goes here"
         Value: !Ref LambdaFunction        
