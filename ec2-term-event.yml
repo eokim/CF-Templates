@@ -103,4 +103,4 @@ Resources:
       SourceArn: !GetAtt EventRule.Arn
   Outputs:
       Description: Lambda Name
-      Value: !Ref LambdaFunction
+      Value: !GetAtt LambdaFunction.Name
