@@ -101,6 +101,7 @@ Resources:
       Action: 'lambda:InvokeFunction'
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EventRule.Arn
-  Outputs:
-      Description: Lambda Name
-      Value: !GetAtt LambdaFunction.Name
+Outputs:
+    LambdaFunctionName:
+        Description: "Name of Lambda Function created by CloudFormation stack"
+        Value: !Ref LambdaFunction
