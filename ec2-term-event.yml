@@ -102,6 +102,6 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EventRule.Arn
   Outputs:
-    Description: Lambda Name
-    Value: !Ref LambdaFunction
-
+    LambdaName:
+      Description: Lambda Name
+      Value: !Ref LambdaFunction
