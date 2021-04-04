@@ -102,6 +102,6 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EventRule.Arn
 Outputs:
-    LambdaFunctionName:
-        Description: "Name of Lambda Function created by CloudFormation stack"
-        Value: !Ref LambdaFunction
+    EventBusName:
+        Description: "Name of the EventBridge"
+        Value: !Ref EventBridge
