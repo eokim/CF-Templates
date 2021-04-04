@@ -1,18 +1,13 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: "Creates Lambda and event rule to invoke ec2 terminations"
 Transform: "AWS::Serverless-2016-10-31"
-Parameters:
-  EventBridge:
-    Description: "Name of EventBridge to associate rule to eg. 'aws.partner/datadog.com/dd-event-us-east-1"
-    Type: "String"
-    Default: "my-event-bus"
 Resources:
   EventRule:
     Type: AWS::Events::Rule
     Properties:
       Name: datadog-event-ec2
       Description: Rule for datadog events to terminate ec2
-      EventBusName: !Ref EventBridge
+      EventBusName: !Sub "my-event-bus-${AWS::Region}"
       EventPattern:
         account:
           - !Sub "${AWS::AccountId}"
@@ -102,9 +97,8 @@ Resources:
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EventRule.Arn
 Outputs:
-    EventBusName:
-        Description: "Name of the EventBridge"
-        Value: !Ref EventBridge
     LambdaFunctionName:
-        Description: "Name of Lambda Function created by CloudFormation stack updated multi-region"
-        Value: !Ref LambdaFunction        
+        Description: "Name of Lambda Function created by CloudFormation stack"
+        Value: !Ref LambdaFunction
+
+
