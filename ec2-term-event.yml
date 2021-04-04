@@ -5,7 +5,7 @@ Parameters:
   EventBridge:
     Description: "Name of EventBridge to associate rule to eg. 'aws.partner/datadog.com/dd-event-us-east-1"
     Type: "String"
-    Default: "aws.partner/datadog.com"
+    Default: "my-event-bus"
 Resources:
   EventRule:
     Type: AWS::Events::Rule
