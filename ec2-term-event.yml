@@ -101,4 +101,7 @@ Resources:
       Action: 'lambda:InvokeFunction'
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EventRule.Arn
+  Outputs:
+    Description: Lambda Name
+    Value: !Ref LambdaFunction
 
