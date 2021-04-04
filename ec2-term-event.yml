@@ -105,3 +105,6 @@ Outputs:
     EventBusName:
         Description: "Name of the EventBridge"
         Value: !Ref EventBridge
+    LambdaFunctionName:
+        Description: "Name of Lambda Function created by CloudFormation stack"
+        Value: !Ref LambdaFunction        
