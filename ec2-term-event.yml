@@ -98,7 +98,7 @@ Resources:
       SourceArn: !GetAtt EventRule.Arn
 Outputs:
     LambdaFunctionName:
-        Description: "Name of Lambda Function created by CloudFormation stack test 1"
+        Description: "Name of Lambda Function created by CloudFormation stack test"
         Value: !Ref LambdaFunction
 
 
