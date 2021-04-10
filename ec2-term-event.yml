@@ -5,7 +5,7 @@ Parameters:
   EventRuleName:
     Description: Name of the event Rule
     Type: String
-    Default: EventRuleName
+    Default: my-event-rule
 Resources:
   EventRule:
     Type: AWS::Events::Rule

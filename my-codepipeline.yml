@@ -16,10 +16,17 @@ Parameters:
   CloudFormationStackName:
     Description: Name of CloudFormation stack to deploy for pipeline
     Type: String
-  CodePipeLineName:
+  CodePipelineName:
     Description: Name of the Pipeline
     Type: String
     Default: mp-event-pipeline
+  UseParameterFile:
+    Description: Enable use of parameter file for Cloudformation Stack
+    Type: String
+    Default: false
+    AllowedValues: [ true, false ]
+Conditions:
+  UseParameterFile: !Equals [ !Ref UseParameterFile, 'true']
 Resources:
   CodePipelineRole:
     Type: AWS::IAM::Role
@@ -76,7 +83,8 @@ Resources:
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Ref CodePipeLineName
+      Name: !Ref CodePipelineName
+      RestartExecutionOnUpdate: false
       RoleArn: !GetAtt CodePipelineRole.Arn
       ArtifactStores:
         - Region: us-east-1
@@ -122,6 +130,7 @@ Resources:
                 RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
                 StackName: !Ref CloudFormationStackName
                 TemplatePath: SourceArtifact::ec2-term-event.yml
+                TemplateConfiguration: !If  [ UseParameterFile, SourceArtifact::parameters.json, !Ref AWS::NoValue ]
               RunOrder: 2
             - Name: DeployToUsEast2
               Region: us-east-2
@@ -138,4 +147,5 @@ Resources:
                 RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
                 StackName: !Ref CloudFormationStackName
                 TemplatePath: SourceArtifact::ec2-term-event.yml
+                TemplateConfiguration: !If  [ UseParameterFile, SourceArtifact::parameters.json, !Ref AWS::NoValue ]
               RunOrder: 2
