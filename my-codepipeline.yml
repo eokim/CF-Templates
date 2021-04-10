@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Mutli Region AWS CodePipeline to implement continuous delivery release process for CloudFormation stacks
+Parameters:
+  S3ArtifactUSEast1:
+    Description: Name of S3 bucket to store CodePipeline artifacts in us-east-1
+    Type: String
+    Default: mp-codepipeline-us-east-1
+  S3ArtifactUSEast2:
+    Description: Name of S3 bucket to store CodePipeline artifacts in us-east-2
+    Type: String
+    Default: mp-codepipeline-us-east-2
+  CodeStarConnection:
+    Description: Name of CodeStarConnection
+    Type: String
+    Default: github
+  CloudFormationStackName:
+    Description: Name of CloudFormation stack to deploy for pipeline
+    Type: String
+  CodePipeLineName:
+    Description: Name of the Pipeline
+    Type: String
+    Default: mp-event-pipeline
+Resources:
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "CodePipelineRole-${AWS::StackName}"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: codepipeline.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CodePipeLineAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:ListBucket
+                  - s3:PutObject
+                  - s3:GetBucketPolicy
+                  - s3:PutObjectAcl
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast1}"
+                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast1}/*"
+                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast2}"
+                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast2}/*"
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DeleteStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:ValidateTemplate
+                  - iam:PassRole
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - codestar-connections:UseConnection
+                Resource: "*"
+  GitHubConnection:
+    Type: AWS::CodeStarConnections::Connection
+    Properties:
+      ConnectionName: !Ref CodeStarConnection
+      ProviderType: "GitHub"
+  CodePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Ref CodePipeLineName
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      ArtifactStores:
+        - Region: us-east-1
+          ArtifactStore:
+            Type: S3
+            Location: !Ref S3ArtifactUSEast1
+        - Region: us-east-2
+          ArtifactStore:
+            Type: S3
+            Location: !Ref S3ArtifactUSEast2
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: AWS
+                Provider: CodeStarSourceConnection
+                Version: "1"
+              InputArtifacts: []
+              OutputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ConnectionArn: !Ref GitHubConnection
+                FullRepositoryId: mphangit/CF-Templates
+                BranchName: master
+                OutputArtifactFormat: CODE_ZIP
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: DeployToUsEast1
+              Region: us-east-1
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              InputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
+                RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
+                StackName: !Ref CloudFormationStackName
+                TemplatePath: SourceArtifact::ec2-term-event.yml
+              RunOrder: 2
+            - Name: DeployToUsEast2
+              Region: us-east-2
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: "1"
+              InputArtifacts:
+                - Name: SourceArtifact
+              Configuration:
+                ActionMode: CREATE_UPDATE
+                Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
+                RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
+                StackName: !Ref CloudFormationStackName
+                TemplatePath: SourceArtifact::ec2-term-event.yml
+              RunOrder: 2

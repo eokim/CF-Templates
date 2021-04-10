@@ -1,0 +1,68 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "CloudFormationPolicy",
+            "Effect": "Allow",
+            "Action": [
+                "cloudformation:CreateStack",
+                "cloudformation:DeleteStack",
+                "cloudformation:UpdateStack",
+                "cloudformation:CreateChangeSet",
+                "cloudformation:DeleteChangeSet",
+                "cloudformation:DescribeStacks"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "EventBridgePolicy",
+            "Effect": "Allow",
+            "Action": [
+                "events:DescribeEventBus",
+                "events:DeleteRule",
+                "events:PutTargets",
+                "events:DescribeRule",
+                "events:PutRule",
+                "events:RemoveTargets"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "IAMPolicy",
+            "Effect": "Allow",
+            "Action": [
+                "iam:GetRole",
+                "iam:PassRole",
+                "iam:DeleteRolePolicy",
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:UpdateRole",
+                "iam:PutRolePolicy",
+                "iam:GetRolePolicy"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Sid": "LambdaPolicy",
+            "Effect": "Allow",
+            "Action": [
+                "lambda:CreateFunction",
+                "lambda:UpdateFunctionEventInvokeConfig",
+                "lambda:UpdateEventSourceMapping",
+                "lambda:GetEventSourceMapping",
+                "lambda:GetFunction",
+                "lambda:UpdateFunctionConfiguration",
+                "lambda:GetFunctionConfiguration",
+                "lambda:CreateEventSourceMapping",
+                "lambda:UpdateFunctionCode",
+                "lambda:AddPermission",
+                "lambda:PutFunctionEventInvokeConfig",
+                "lambda:DeleteFunctionEventInvokeConfig",
+                "lambda:DeleteFunction",
+                "lambda:RemovePermission"
+            ],
+            "Resource": "*"
+        }
+
+    ]
+}
