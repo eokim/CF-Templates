@@ -16,6 +16,14 @@ Parameters:
   CloudFormationStackName:
     Description: Name of CloudFormation stack to deploy for pipeline
     Type: String
+  RepositoryName:
+    Description: Name of full repository e.g. "mphangit/CF-Templates"
+    Type: String
+    Default: mphangit/CF-Templates
+  CloudFormationFileName:
+    Description: Name of CloudFormation template file
+    Type: String
+    Default: ec2-term-event.yml
   CodePipelineName:
     Description: Name of the Pipeline
     Type: String
@@ -109,7 +117,7 @@ Resources:
                 - Name: SourceArtifact
               Configuration:
                 ConnectionArn: !Ref GitHubConnection
-                FullRepositoryId: mphangit/CF-Templates
+                FullRepositoryId: !Ref RepositoryName
                 BranchName: master
                 OutputArtifactFormat: CODE_ZIP
               RunOrder: 1
@@ -129,8 +137,12 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
                 RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
                 StackName: !Ref CloudFormationStackName
-                TemplatePath: SourceArtifact::ec2-term-event.yml
-                TemplateConfiguration: !If  [ UseParameterFile, SourceArtifact::parameters.json, !Ref AWS::NoValue ]
+                TemplatePath: !Sub SourceArtifact::${CloudFormationFileName}
+                TemplateConfiguration:
+                  !If 
+                      - UseParameterFile
+                      - !Sub "SourceArtifact::${CloudFormationStackName}-parameters.json"
+                      - !Ref AWS::NoValue
               RunOrder: 2
             - Name: DeployToUsEast2
               Region: us-east-2
@@ -146,6 +158,6 @@ Resources:
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
                 RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
                 StackName: !Ref CloudFormationStackName
-                TemplatePath: SourceArtifact::ec2-term-event.yml
+                TemplatePath: !Sub SourceArtifact::${CloudFormationFileName}
                 TemplateConfiguration: !If  [ UseParameterFile, SourceArtifact::parameters.json, !Ref AWS::NoValue ]
               RunOrder: 2
