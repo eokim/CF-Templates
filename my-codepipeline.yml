@@ -159,5 +159,9 @@ Resources:
                 RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
                 StackName: !Ref CloudFormationStackName
                 TemplatePath: !Sub SourceArtifact::${CloudFormationFileName}
-                TemplateConfiguration: !If  [ UseParameterFile, SourceArtifact::parameters.json, !Ref AWS::NoValue ]
+                TemplateConfiguration:
+                  !If 
+                      - UseParameterFile
+                      - !Sub "SourceArtifact::${CloudFormationStackName}-parameters.json"
+                      - !Ref AWS::NoValue
               RunOrder: 2
