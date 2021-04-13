@@ -29,7 +29,7 @@ Parameters:
     Type: String
     Default: mp-event-pipeline
   UseParameterFile:
-    Description: Enable use of parameter file for Cloudformation Stack
+    Description: Enable use of parameter file for Cloudformation Stack.  File name must be "{cloudformation-stack-name}-parameters.json" and in same Repo
     Type: String
     Default: false
     AllowedValues: [ true, false ]
@@ -123,7 +123,7 @@ Resources:
               RunOrder: 1
         - Name: Deploy
           Actions:
-            - Name: DeployToUsEast1
+            - Name: US-East-1
               Region: us-east-1
               ActionTypeId:
                 Category: Deploy
@@ -144,7 +144,7 @@ Resources:
                       - !Sub "SourceArtifact::${CloudFormationStackName}-parameters.json"
                       - !Ref AWS::NoValue
               RunOrder: 2
-            - Name: DeployToUsEast2
+            - Name: US-East-2
               Region: us-east-2
               ActionTypeId:
                 Category: Deploy
