@@ -34,7 +34,7 @@ Resources:
     Properties:
       FunctionName: ec2-terminate
       Description: Terminate EC2 instances
-      Role: !GetAtt LambdaExecutionRole.Arn
+      Role: !GetAtt LambdaRole.Arn
       InlineCode: |
         import boto3
         import json
@@ -61,7 +61,7 @@ Resources:
       Runtime: python3.8
       Timeout: 3
       Handler: index.lambda_handler
-  LambdaExecutionRole:
+  LambdaRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Sub "terminate-instance-lambda-${AWS::Region}"
