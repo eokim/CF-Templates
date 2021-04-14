@@ -123,6 +123,7 @@ Resources:
                 FullRepositoryId: !Ref RepositoryName
                 BranchName: master
                 OutputArtifactFormat: CODE_ZIP
+                DetectChanges: false
               RunOrder: 1
         - Name: Deploy
           Actions:
