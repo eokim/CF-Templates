@@ -39,7 +39,7 @@ Resources:
   CodePipelineRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "CodePipelineRole-${AWS::StackName}"
+      RoleName: !Sub CodePipelineRole-${AWS::StackName}
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -61,10 +61,10 @@ Resources:
                   - s3:GetBucketPolicy
                   - s3:PutObjectAcl
                 Resource:
-                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast1}"
-                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast1}/*"
-                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast2}"
-                  - !Sub "arn:aws:s3:::${S3ArtifactUSEast2}/*"
+                  - !Sub arn:aws:s3:::${S3ArtifactUSEast1}
+                  - !Sub arn:aws:s3:::${S3ArtifactUSEast1}/*
+                  - !Sub arn:aws:s3:::${S3ArtifactUSEast2}
+                  - !Sub arn:aws:s3:::${S3ArtifactUSEast2}/*
               - Effect: Allow
                 Action:
                   - cloudformation:CreateStack
@@ -78,7 +78,10 @@ Resources:
                   - cloudformation:SetStackPolicy
                   - cloudformation:ValidateTemplate
                   - iam:PassRole
-                Resource: "*"
+                Resource: 
+                  - !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
+                  - !Sub arn:aws:cloudformation:us-east-1:${AWS::AccountId}:stack/${CloudFormationStackName}/*
+                  - !Sub arn:aws:cloudformation:us-east-2:${AWS::AccountId}:stack/${CloudFormationStackName}/*
               - Effect: Allow
                 Action:
                   - codestar-connections:UseConnection
@@ -141,7 +144,7 @@ Resources:
                 TemplateConfiguration:
                   !If 
                       - UseParameterFile
-                      - !Sub "SourceArtifact::${CloudFormationStackName}-parameters.json"
+                      - !Sub SourceArtifact::${CloudFormationStackName}-parameters.json
                       - !Ref AWS::NoValue
               RunOrder: 2
             - Name: US-East-2
@@ -162,6 +165,6 @@ Resources:
                 TemplateConfiguration:
                   !If 
                       - UseParameterFile
-                      - !Sub "SourceArtifact::${CloudFormationStackName}-parameters.json"
+                      - !Sub SourceArtifact::${CloudFormationStackName}-parameters.json
                       - !Ref AWS::NoValue
               RunOrder: 2
