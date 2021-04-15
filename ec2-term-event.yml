@@ -64,7 +64,7 @@ Resources:
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub "terminate-instance-lambda-${AWS::Region}"
+      RoleName: !Sub "${AWS::StackName}-terminate-instance-lambda-${AWS::Region}"
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
