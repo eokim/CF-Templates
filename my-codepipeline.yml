@@ -39,7 +39,7 @@ Resources:
   CodePipelineRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub CodePipelineRole-${AWS::StackName}
+      RoleName: !Sub ${AWS::StackName}-CodePipelineRole
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -79,13 +79,26 @@ Resources:
                   - cloudformation:ValidateTemplate
                   - iam:PassRole
                 Resource: 
-                  - !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
+                  - !GetAtt CloudFormationRole.Arn
                   - !Sub arn:aws:cloudformation:us-east-1:${AWS::AccountId}:stack/${CloudFormationStackName}/*
                   - !Sub arn:aws:cloudformation:us-east-2:${AWS::AccountId}:stack/${CloudFormationStackName}/*
               - Effect: Allow
                 Action:
                   - codestar-connections:UseConnection
-                Resource: "*"
+                Resource: !Ref GitHubConnection
+  CloudFormationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${AWS::StackName}-CloudFormationRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: cloudformation.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub arn:aws:iam::${AWS::AccountId}:policy/CodePipeline-CloudFormation-Policy
   GitHubConnection:
     Type: AWS::CodeStarConnections::Connection
     Properties:
@@ -139,7 +152,7 @@ Resources:
               Configuration:
                 ActionMode: CREATE_UPDATE
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
-                RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
+                RoleArn: !GetAtt CloudFormationRole.Arn
                 StackName: !Ref CloudFormationStackName
                 TemplatePath: !Sub SourceArtifact::${CloudFormationFileName}
                 TemplateConfiguration:
@@ -160,7 +173,7 @@ Resources:
               Configuration:
                 ActionMode: CREATE_UPDATE
                 Capabilities: CAPABILITY_IAM,CAPABILITY_AUTO_EXPAND,CAPABILITY_NAMED_IAM
-                RoleArn: !Sub arn:aws:iam::${AWS::AccountId}:role/test-cf-role
+                RoleArn: !GetAtt CloudFormationRole.Arn
                 StackName: !Ref CloudFormationStackName
                 TemplatePath: !Sub SourceArtifact::${CloudFormationFileName}
                 TemplateConfiguration:
