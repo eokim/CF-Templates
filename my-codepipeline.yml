@@ -29,7 +29,7 @@ Parameters:
     Type: String
     Default: mp-event-pipeline
   UseParameterFile:
-    Description: Enable use of parameter file for Cloudformation Stack.  File name must be "{cloudformation-stack-name}-parameters.json" and in same Repo
+    Description: Enable use of parameter file for Cloudformation Stack.  File name must be "template-parameters.json" and in same Repo
     Type: String
     Default: false
     AllowedValues: [ true, false ]
@@ -158,7 +158,7 @@ Resources:
                 TemplateConfiguration:
                   !If 
                       - UseParameterFile
-                      - !Sub SourceArtifact::${CloudFormationStackName}-parameters.json
+                      - SourceArtifact::template-parameters.json
                       - !Ref AWS::NoValue
               RunOrder: 2
             - Name: US-East-2
@@ -179,6 +179,6 @@ Resources:
                 TemplateConfiguration:
                   !If 
                       - UseParameterFile
-                      - !Sub SourceArtifact::${CloudFormationStackName}-parameters.json
+                      - SourceArtifact::template-parameters.json
                       - !Ref AWS::NoValue
               RunOrder: 2
